@@ -9,11 +9,11 @@ public class URLRuleDetectorTest {
         URLRuleDetector detector = new URLRuleDetector();
 
         String[] urls = {
-                "https://google.com",
-                "http://192.168.1.1/login",
-                "http://secure-login-account.example.com/verify",
-                "https://bit.ly/example",
-                "https://a.b.c.example.com"
+                "https://example.com/" + "a".repeat(70),
+                "https://example.com/path--name",
+                "https://example.com/path//login",
+                "https://example.com/search?q=%20",
+                "http://[2001:db8::1]/login"
         };
 
         for (String url : urls) {
