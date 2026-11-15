@@ -60,10 +60,12 @@ public class DashboardFrame extends JFrame {
 
         JButton scannerButton = new JButton("Open URL Scanner");
         JButton historyButton = new JButton("View Scan History");
+        JButton reportsButton = new JButton("View Reports");
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(scannerButton);
         bottomPanel.add(historyButton);
+        bottomPanel.add(reportsButton);
 
         add(headerPanel, BorderLayout.NORTH);
         add(statisticsPanel, BorderLayout.CENTER);
@@ -77,6 +79,11 @@ public class DashboardFrame extends JFrame {
         historyButton.addActionListener(e -> {
             ScanHistoryFrame history = new ScanHistoryFrame(username);
             history.setVisible(true);
+        });
+
+        reportsButton.addActionListener(e -> {
+            ReportFrame reports = new ReportFrame(username);
+            reports.setVisible(true);
         });
 
         loadStatistics(username);
@@ -109,7 +116,7 @@ public class DashboardFrame extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Unable to load dashboard statistics: " + e.getMessage()
+                    "Unable to load dashboard statistics."
             );
         }
     }
