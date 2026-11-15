@@ -73,12 +73,13 @@ public class AdminDashboardFrame extends JFrame {
             frame.setVisible(true);
         });
 
-        userManagementButton.addActionListener(e ->
-                JOptionPane.showMessageDialog(
-                        this,
-                        "User Management module is under development."
-                )
-        );
+        userManagementButton.addActionListener(e -> {
+
+            UserManagementFrame frame =
+                    new UserManagementFrame(username);
+
+            frame.setVisible(true);
+        });
 
         adminLogsButton.addActionListener(e -> {
 
