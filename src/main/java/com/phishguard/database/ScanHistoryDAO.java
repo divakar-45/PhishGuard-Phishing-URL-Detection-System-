@@ -15,12 +15,17 @@ public class ScanHistoryDAO {
             String submittedUrl,
             String registeredDomain,
             int riskScore,
-            String classification) throws SQLException {
+            String classification,
+            List<String> indicators) throws SQLException {
 
         String sql = "INSERT INTO scan_history "
                 + "(user_id, submitted_url, registered_domain, "
-                + "risk_score, final_classification) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                + "risk_score, final_classification, detected_indicators) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        String storedIndicators = indicators == null
+                ? ""
+                : String.join("\n", indicators);
 
         try (Connection connection = DatabaseConnection.getConnection()) {
 
@@ -36,6 +41,7 @@ public class ScanHistoryDAO {
                 statement.setString(3, registeredDomain);
                 statement.setInt(4, riskScore);
                 statement.setString(5, classification);
+                statement.setString(6, storedIndicators);
 
                 return statement.executeUpdate() == 1;
             }

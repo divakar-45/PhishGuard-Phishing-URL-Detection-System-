@@ -119,9 +119,9 @@ public class URLScannerFrame extends JFrame {
                     result.getSubmittedUrl(),
                     result.getRegisteredDomain(),
                     result.getRiskScore(),
-                    result.getClassification()
-            );
-
+                    result.getClassification(),
+                    result.getIndicators()
+                );
             if (!saved) {
 
                 JOptionPane.showMessageDialog(
