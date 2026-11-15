@@ -73,7 +73,7 @@ public class UserDAO {
                         }
 
                         return PasswordUtil.verifyPassword(
-                            password, storedHash
+                                password, storedHash
                         );
                     }
                 }
@@ -81,5 +81,32 @@ public class UserDAO {
         }
 
         return false;
+    }
+
+    public int getUserId(String username) throws SQLException {
+
+        String sql = "SELECT user_id FROM users WHERE username = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection()) {
+
+            if (connection == null) {
+                throw new SQLException("Database connection unavailable.");
+            }
+
+            try (PreparedStatement statement =
+                    connection.prepareStatement(sql)) {
+
+                statement.setString(1, username);
+
+                try (ResultSet result = statement.executeQuery()) {
+
+                    if (result.next()) {
+                        return result.getInt("user_id");
+                    }
+                }
+            }
+        }
+
+        return -1;
     }
 }

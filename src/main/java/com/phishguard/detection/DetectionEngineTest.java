@@ -1,3 +1,4 @@
+
 package com.phishguard.detection;
 
 public class DetectionEngineTest {
@@ -30,6 +31,12 @@ public class DetectionEngineTest {
 
                 System.out.println("Trusted Domain: "
                         + (result.isTrustedDomain() ? "YES" : "NO"));
+
+                System.out.println("Risk Score: "
+                        + result.getRiskScore());
+
+                System.out.println("Classification: "
+                        + result.getClassification());
 
                 System.out.println("Detected Indicators:");
 
