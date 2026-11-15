@@ -80,12 +80,11 @@ public class AdminDashboardFrame extends JFrame {
                 )
         );
 
-        adminLogsButton.addActionListener(e ->
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Admin Activity Logs module is under development."
-                )
-        );
+        adminLogsButton.addActionListener(e -> {
+
+            AdminLogsFrame frame = new AdminLogsFrame(username);
+            frame.setVisible(true);
+        });
 
         logoutButton.addActionListener(e -> {
 
