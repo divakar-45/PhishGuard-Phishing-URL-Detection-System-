@@ -109,4 +109,31 @@ public class UserDAO {
 
         return -1;
     }
+
+    public String getUserRole(String username) throws SQLException {
+
+        String sql = "SELECT role FROM users WHERE username = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection()) {
+
+            if (connection == null) {
+                throw new SQLException("Database connection unavailable.");
+            }
+
+            try (PreparedStatement statement =
+                    connection.prepareStatement(sql)) {
+
+                statement.setString(1, username);
+
+                try (ResultSet result = statement.executeQuery()) {
+
+                    if (result.next()) {
+                        return result.getString("role");
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 }

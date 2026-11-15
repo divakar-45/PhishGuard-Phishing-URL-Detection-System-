@@ -19,8 +19,8 @@ public class LoginFrame extends JFrame {
         heading.setFont(new Font("Arial", Font.BOLD, 28));
 
         JLabel subtitle = new JLabel(
-            "Phishing URL Detection System",
-            SwingConstants.CENTER
+                "Phishing URL Detection System",
+                SwingConstants.CENTER
         );
 
         JPanel headerPanel = new JPanel(new GridLayout(2, 1));
@@ -28,7 +28,9 @@ public class LoginFrame extends JFrame {
         headerPanel.add(subtitle);
 
         JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 15));
-        formPanel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+        formPanel.setBorder(
+                BorderFactory.createEmptyBorder(30, 50, 30, 50)
+        );
 
         JTextField usernameField = new JTextField();
         JPasswordField passwordField = new JPasswordField();
@@ -49,7 +51,8 @@ public class LoginFrame extends JFrame {
         add(formPanel, BorderLayout.CENTER);
 
         registerButton.addActionListener(e -> {
-            RegistrationFrame registrationFrame = new RegistrationFrame();
+            RegistrationFrame registrationFrame =
+                    new RegistrationFrame();
             registrationFrame.setVisible(true);
         });
 
@@ -61,45 +64,79 @@ public class LoginFrame extends JFrame {
             if (username.isEmpty() || password.isEmpty()) {
 
                 JOptionPane.showMessageDialog(
-                    this,
-                    "Please enter username and password."
+                        this,
+                        "Please enter username and password."
                 );
 
                 return;
             }
 
             try {
+
                 UserDAO userDAO = new UserDAO();
 
                 boolean authenticated =
-                    userDAO.authenticateUser(username, password);
+                        userDAO.authenticateUser(username, password);
 
-                if (authenticated) {
+                if (!authenticated) {
 
                     JOptionPane.showMessageDialog(
-                        this,
-                        "Login successful!"
+                            this,
+                            "Invalid username or password, or inactive account."
                     );
 
+                    return;
+                }
+
+                String role = userDAO.getUserRole(username);
+
+                if (role == null) {
+
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Unable to retrieve user role.",
+                            "Login Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+
+                    return;
+                }
+
+                if ("ADMIN".equalsIgnoreCase(role)) {
+
+                    AdminDashboardFrame adminDashboard =
+                            new AdminDashboardFrame(username);
+
+                    adminDashboard.setVisible(true);
+
+                } else if ("USER".equalsIgnoreCase(role)) {
+
                     DashboardFrame dashboard =
-                        new DashboardFrame(username);
+                            new DashboardFrame(username);
 
                     dashboard.setVisible(true);
-                    dispose();
 
                 } else {
 
                     JOptionPane.showMessageDialog(
-                        this,
-                        "Invalid username or password, or inactive account."
+                            this,
+                            "Unauthorized account role.",
+                            "Access Denied",
+                            JOptionPane.ERROR_MESSAGE
                     );
+
+                    return;
                 }
+
+                dispose();
 
             } catch (Exception ex) {
 
                 JOptionPane.showMessageDialog(
-                    this,
-                    "Login failed: " + ex.getMessage()
+                        this,
+                        "Login failed. Please try again.",
+                        "Login Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
             }
         });
