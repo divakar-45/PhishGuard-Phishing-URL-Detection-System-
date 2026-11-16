@@ -11,7 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.net.IDN;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class TrustedDomainBulkImporter {
 
@@ -27,6 +29,8 @@ public class TrustedDomainBulkImporter {
     private int duplicates;
     private int invalid;
     private int processed;
+
+    private final Set<String> seenDomains = new HashSet<>();
 
     public static void main(String[] args) {
 
@@ -99,10 +103,14 @@ public class TrustedDomainBulkImporter {
                     String domain;
 
                     try {
-                        domain = extractDomain(line);
-                        domain = normalizeDomain(domain);
+                        domain = normalizeDomain(extractDomain(line));
                     } catch (IllegalArgumentException e) {
                         invalid++;
+                        continue;
+                    }
+
+                    if (!seenDomains.add(domain)) {
+                        duplicates++;
                         continue;
                     }
 
@@ -168,7 +176,12 @@ public class TrustedDomainBulkImporter {
 
         if (value.contains(",")) {
             String[] columns = value.split(",", -1);
-            value = columns[columns.length - 1].trim();
+
+            if (columns.length != 2) {
+                throw new IllegalArgumentException("Invalid CSV row");
+            }
+
+            value = columns[1].trim();
         }
 
         if (value.equalsIgnoreCase("domain")
@@ -181,8 +194,10 @@ public class TrustedDomainBulkImporter {
                 || value.contains("@")
                 || value.contains(":")
                 || value.contains("?")
-                || value.contains("#")) {
-            throw new IllegalArgumentException("Not a domain entry");
+                || value.contains("#")
+                || value.contains("_")
+                || value.contains("*")) {
+            throw new IllegalArgumentException("Invalid domain entry");
         }
 
         return value;
@@ -194,8 +209,7 @@ public class TrustedDomainBulkImporter {
             throw new IllegalArgumentException("Empty domain");
         }
 
-        String normalized = domain.trim()
-                .toLowerCase(Locale.ROOT);
+        String normalized = domain.trim().toLowerCase(Locale.ROOT);
 
         if (normalized.endsWith(".")) {
             normalized = normalized.substring(
@@ -203,20 +217,44 @@ public class TrustedDomainBulkImporter {
             );
         }
 
-        try {
-            normalized = IDN.toASCII(
-                    normalized,
-                    IDN.USE_STD3_ASCII_RULES
-            ).toLowerCase(Locale.ROOT);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid domain");
+        if (normalized.startsWith(".") || normalized.contains("..")) {
+            throw new IllegalArgumentException("Invalid domain structure");
         }
 
         if (normalized.length() > 253 || !normalized.contains(".")) {
             throw new IllegalArgumentException("Invalid domain length");
         }
 
-        String[] labels = normalized.split("\\.", -1);
+        String ascii;
+
+        try {
+            ascii = IDN.toASCII(
+                    normalized,
+                    IDN.USE_STD3_ASCII_RULES
+            ).toLowerCase(Locale.ROOT);
+
+            String unicode = IDN.toUnicode(ascii);
+
+            String roundTrip = IDN.toASCII(
+                    unicode,
+                    IDN.USE_STD3_ASCII_RULES
+            ).toLowerCase(Locale.ROOT);
+
+            if (!ascii.equals(roundTrip)) {
+                throw new IllegalArgumentException(
+                        "Invalid internationalized domain"
+                );
+            }
+
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid domain encoding");
+        }
+
+        if (ascii.length() > 253) {
+            throw new IllegalArgumentException("Domain too long");
+        }
+
+        String[] labels = ascii.split("\\.", -1);
 
         for (String label : labels) {
 
@@ -231,11 +269,13 @@ public class TrustedDomainBulkImporter {
 
         String tld = labels[labels.length - 1];
 
-        if (!tld.matches("[a-z]{2,63}")) {
+        if (!tld.matches(
+                "(?:[a-z]{2,63}|xn--[a-z0-9-]{2,59})"
+        )) {
             throw new IllegalArgumentException("Invalid top-level domain");
         }
 
-        return normalized;
+        return ascii;
     }
 
     private void printSummary() {
@@ -246,6 +286,7 @@ public class TrustedDomainBulkImporter {
         System.out.println("Successfully inserted : " + inserted);
         System.out.println("Already existed       : " + duplicates);
         System.out.println("Invalid entries       : " + invalid);
+        System.out.println("Unique domains checked: " + seenDomains.size());
         System.out.println("====================================");
     }
 }
